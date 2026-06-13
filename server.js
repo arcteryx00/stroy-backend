@@ -10,7 +10,11 @@ dotenv.config();
 const app = express();
 const { Pool } = pg;
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 const pool = new Pool({
