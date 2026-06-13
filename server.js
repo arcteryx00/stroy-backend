@@ -10,6 +10,7 @@ dotenv.config();
 const app = express();
 const { Pool } = pg;
 
+// Настройка CORS для всех доменов
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -35,12 +36,13 @@ function auth(req, res, next) {
     }
 }
 
+// ========== ТЕСТОВЫЕ МАРШРУТЫ ==========
 app.get("/", (req, res) => {
     res.json({ message: "Backend работает" });
 });
 
-// ========== АВТОРИЗАЦИЯ ==========
-app.post("/api/register", async (req, res) => {
+// ========== АВТОРИЗАЦИЯ (без /api) ==========
+app.post("/register", async (req, res) => {
     try {
         const { username, password } = req.body;
         if (!username || !password) return res.status(400).json({ error: "Введите логин и пароль" });
@@ -58,7 +60,7 @@ app.post("/api/register", async (req, res) => {
     }
 });
 
-app.post("/api/login", async (req, res) => {
+app.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
         const result = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
@@ -74,7 +76,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ========== ПРОЕКТЫ ==========
-app.get('/api/projects', auth, async (req, res) => {
+app.get('/projects', auth, async (req, res) => {
     try {
         const result = await pool.query(`SELECT * FROM projects WHERE user_id = $1 ORDER BY id DESC`, [req.user.id]);
         res.json(result.rows);
@@ -83,7 +85,7 @@ app.get('/api/projects', auth, async (req, res) => {
     }
 });
 
-app.post('/api/projects', auth, async (req, res) => {
+app.post('/projects', auth, async (req, res) => {
     try {
         const { name, contractAmount, advancePercent, paymentDelay } = req.body;
         const result = await pool.query(
@@ -97,7 +99,7 @@ app.post('/api/projects', auth, async (req, res) => {
     }
 });
 
-app.put('/api/projects/:id', auth, async (req, res) => {
+app.put('/projects/:id', auth, async (req, res) => {
     const { id } = req.params;
     const { name, contractAmount, advancePercent, paymentDelay } = req.body;
     try {
@@ -113,7 +115,7 @@ app.put('/api/projects/:id', auth, async (req, res) => {
     }
 });
 
-app.delete('/api/projects/:id', auth, async (req, res) => {
+app.delete('/projects/:id', auth, async (req, res) => {
     const { id } = req.params;
     try {
         await pool.query('DELETE FROM transactions WHERE project_id = $1', [id]);
@@ -126,7 +128,7 @@ app.delete('/api/projects/:id', auth, async (req, res) => {
 });
 
 // ========== ТРАНЗАКЦИИ ==========
-app.get("/api/transactions", auth, async (req, res) => {
+app.get("/transactions", auth, async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT t.* FROM transactions t JOIN projects p ON p.id = t.project_id WHERE p.user_id = $1 ORDER BY t.project_id, t.month`,
@@ -138,7 +140,7 @@ app.get("/api/transactions", auth, async (req, res) => {
     }
 });
 
-app.get("/api/transactions/:projectId", auth, async (req, res) => {
+app.get("/transactions/:projectId", auth, async (req, res) => {
     try {
         const { projectId } = req.params;
         const result = await pool.query(
@@ -152,7 +154,7 @@ app.get("/api/transactions/:projectId", auth, async (req, res) => {
     }
 });
 
-app.post("/api/transactions", auth, async (req, res) => {
+app.post("/transactions", auth, async (req, res) => {
     try {
         const { projectId, month, incomeAccrued, expense, cashIncoming, cashOutgoing } = req.body;
         const existing = await pool.query(`SELECT * FROM transactions WHERE project_id = $1 AND month = $2`, [projectId, month]);
