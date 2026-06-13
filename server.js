@@ -10,7 +10,6 @@ dotenv.config();
 const app = express();
 const { Pool } = pg;
 
-// Настройка CORS для всех доменов
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -36,12 +35,10 @@ function auth(req, res, next) {
     }
 }
 
-// ========== ТЕСТОВЫЕ МАРШРУТЫ ==========
 app.get("/", (req, res) => {
     res.json({ message: "Backend работает" });
 });
 
-// ========== АВТОРИЗАЦИЯ (без /api) ==========
 app.post("/register", async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -75,7 +72,6 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// ========== ПРОЕКТЫ ==========
 app.get('/projects', auth, async (req, res) => {
     try {
         const result = await pool.query(`SELECT * FROM projects WHERE user_id = $1 ORDER BY id DESC`, [req.user.id]);
@@ -127,7 +123,6 @@ app.delete('/projects/:id', auth, async (req, res) => {
     }
 });
 
-// ========== ТРАНЗАКЦИИ ==========
 app.get("/transactions", auth, async (req, res) => {
     try {
         const result = await pool.query(
